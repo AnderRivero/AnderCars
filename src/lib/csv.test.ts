@@ -1,20 +1,51 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it } from 'vitest'
 import { parseFuelLog } from './csv'
 
-const csv = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'docs', 'Fuel_Log.csv'),
-  'utf8',
-)
+const historyPath = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'docs', 'Fuel_Log.csv')
+
+const sampleCsv = [
+  'Row ID,Vehicle ID,Odometer,Qty,Partial Tank,Missed Fill Up,Total Cost,Distance Travelled,Eff,Octane,Fuel Brand,Filling Station,Notes,Day,Month,Year,Receipt Path,Latitude,Longitude,Record Type,Record Desc',
+  '1,Chevrolet Aveo,100.0,10,0,0,5.0,0,0,0,,EL PRADO,Sin cola.,1,1,2024,,0,0,0,Fuel Record',
+  '2,Chevrolet Aveo,120.0,0,0,0,25.0,0,0,0,,TALLER SIMEÍ ,Incluye filtro,2,1,2024,,0,0,1,"Filtros de gasolina, Engine Oil"',
+  '3,Chevrolet Aveo,120.0,0,0,0,0,0,0,0,,,,3,1,2024,,0,0,4,adhoc',
+].join('\n')
 
 describe('parseFuelLog', () => {
-  const parsed = parseFuelLog(csv)
-  const rows = parsed.vehicles.flatMap((vehicle) => vehicle.rows)
+  it('reads a small export without the personal history file', () => {
+    const parsed = parseFuelLog(sampleCsv)
+    const rows = parsed.vehicles.flatMap((vehicle) => vehicle.rows)
 
-  it('keeps one vehicle and skips fuel rows', () => {
+    assert.equal(parsed.skippedFuel, 1)
+    assert.equal(parsed.skippedInvalid, 0)
+    assert.equal(parsed.vehicles[0].brand, 'Chevrolet')
+    assert.equal(parsed.vehicles[0].model, 'Aveo')
+    assert.equal(rows.length, 2)
+    assert.deepEqual(rows[0].services, ['Filtros de gasolina', 'Engine Oil'])
+    assert.equal(rows[0].workshop, 'TALLER SIMEÍ')
+    assert.equal(rows[1].kind, 'odometer')
+    assert.deepEqual(rows[1].services, [])
+    assert.equal(
+      rows.some((row) => row.notes === 'Sin cola.'),
+      false,
+    )
+  })
+})
+
+const localHistoryTest = existsSync(historyPath) ? it : it.skip
+
+function loadHistory() {
+  const parsed = parseFuelLog(readFileSync(historyPath, 'utf8'))
+  const rows = parsed.vehicles.flatMap((vehicle) => vehicle.rows)
+  return { parsed, rows }
+}
+
+describe('parseFuelLog with the local history file', () => {
+  localHistoryTest('keeps one vehicle and skips fuel rows', () => {
+    const { parsed, rows } = loadHistory()
     assert.equal(parsed.vehicles.length, 1)
     assert.equal(parsed.vehicles[0].brand, 'Chevrolet')
     assert.equal(parsed.vehicles[0].model, 'Aveo Lt Speed')
@@ -23,13 +54,15 @@ describe('parseFuelLog', () => {
     assert.equal(rows.length, 55)
   })
 
-  it('separates services from odometer readings', () => {
+  localHistoryTest('separates services from odometer readings', () => {
+    const { rows } = loadHistory()
     assert.equal(rows.filter((row) => row.kind === 'service').length, 51)
     assert.equal(rows.filter((row) => row.kind === 'odometer').length, 4)
     assert.ok(rows.filter((row) => row.kind === 'odometer').every((row) => row.services.length === 0))
   })
 
-  it('keeps every service listed after a comma', () => {
+  localHistoryTest('keeps every service listed after a comma', () => {
+    const { rows } = loadHistory()
     const row = rows.find((item) => item.sourceRowId.endsWith(':58'))
     assert.ok(row)
     assert.deepEqual(row.services, [
@@ -42,7 +75,8 @@ describe('parseFuelLog', () => {
     ])
   })
 
-  it('preserves the first oil change and accented workshop names', () => {
+  localHistoryTest('preserves the first oil change and accented workshop names', () => {
+    const { rows } = loadHistory()
     const first = rows.find((item) => item.sourceRowId.endsWith(':2'))
     assert.ok(first)
     assert.equal(first.entryDate, '2021-10-20')
@@ -56,7 +90,8 @@ describe('parseFuelLog', () => {
     assert.ok(workshops.has('TALLER SIMEÍ'))
   })
 
-  it('does not import fuel notes and never goes backwards in kilometres', () => {
+  localHistoryTest('does not import fuel notes and never goes backwards in kilometres', () => {
+    const { rows } = loadHistory()
     assert.equal(
       rows.some((row) => row.notes === 'Sin cola.'),
       false,

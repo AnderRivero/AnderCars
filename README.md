@@ -66,7 +66,7 @@ La clave anon queda dentro del JavaScript público. Así está pensado Supabase:
 - El kilometraje nuevo tiene que ser mayor o igual que el último. La misma regla está en la base, no solo en la pantalla. Puedes corregir la lectura más alta editándola, hasta el valor anterior.
 - Supabase puede pausar un proyecto gratis si durante unos 7 días casi no recibe consultas. Avisa por correo y se reactiva desde el panel, sin costo, durante un año.
 - Base de 500 MB, 1 GB de archivos y el volumen de este historial caben en el plan gratis.
-- `docs/Fuel_Log.csv` es un respaldo personal. Si el repositorio es público, ese archivo también lo es: notas, talleres y costos quedan visibles aunque la app pida login. Después de importar, puedes sacarlo del repositorio si no quieres publicarlo.
+- `docs/Fuel_Log.csv` es un respaldo personal y no hace falta subirlo. La página lo pide desde tu computadora al importar. En GitHub Actions las pruebas usan un ejemplo corto y omiten ese archivo si no está en el repositorio.
 
 ## Pantallas
 
