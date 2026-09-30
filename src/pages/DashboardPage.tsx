@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CircleDollarSign, Gauge, MapPinned, NotebookText } from 'lucide-react'
+import { EntryModal } from '../components/EntryModal'
+import { Fab } from '../components/Fab'
 import { useData } from '../data/DataProvider'
 import { carLabel, formatDate, formatKm, formatUsd, todayISO } from '../lib/format'
 import { buildAlerts, costByService, costByYear, mileageByYear, observedKm } from '../lib/metrics'
@@ -7,6 +10,7 @@ import { buildAlerts, costByService, costByYear, mileageByYear, observedKm } fro
 export function DashboardPage() {
   const { cars, services, entries, loading } = useData()
   const [carId, setCarId] = useState('')
+  const [creatingEntry, setCreatingEntry] = useState(false)
   const today = todayISO()
 
   useEffect(() => {
@@ -73,19 +77,19 @@ export function DashboardPage() {
 
           <section className="grid-stats">
             <article className="stat">
-              <span>Kilometraje actual</span>
+              <span><Gauge size={16} /> Kilometraje actual</span>
               <strong>{formatKm(car.odometer)} km</strong>
             </article>
             <article className="stat">
-              <span>Recorrido registrado</span>
+              <span><MapPinned size={16} /> Recorrido registrado</span>
               <strong>{formatKm(observedKm(carEntries))} km</strong>
             </article>
             <article className="stat">
-              <span>Gastado</span>
+              <span><CircleDollarSign size={16} /> Gastado</span>
               <strong>{formatUsd(spent)}</strong>
             </article>
             <article className="stat">
-              <span>Entradas</span>
+              <span><NotebookText size={16} /> Entradas</span>
               <strong>{carEntries.length}</strong>
             </article>
           </section>
@@ -129,8 +133,10 @@ export function DashboardPage() {
                         <td>{year.year}</td>
                         <td>
                           <div className="bar-row">
-                            <span className="bar" style={{ width: `${(year.km / maxYearKm) * 100}%` }} />
-                            <span>{formatKm(year.km)} km</span>
+                            <span className="bar-track">
+                              <span className="bar" style={{ width: `${(year.km / maxYearKm) * 100}%` }} />
+                            </span>
+                            <span className="bar-label">{formatKm(year.km)} km</span>
                           </div>
                         </td>
                         <td>{formatKm(year.endOdometer)} km</td>
@@ -228,6 +234,9 @@ export function DashboardPage() {
           </section>
         </>
       )}
+
+      <Fab label="Nueva entrada" onClick={() => setCreatingEntry(true)} />
+      {creatingEntry && <EntryModal defaultCarId={carId} onClose={() => setCreatingEntry(false)} />}
     </>
   )
 }

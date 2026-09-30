@@ -1,7 +1,9 @@
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { useState } from 'react'
+import { LogIn } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import { Layout } from './components/Layout'
+import { RacingFlagIcon } from './components/RacingFlagIcon'
 import { DataProvider } from './data/DataProvider'
 import { CarsPage } from './pages/CarsPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -82,12 +84,18 @@ function Login() {
 
   return (
     <section className="screen">
-      <article className="auth-card">
-        <p className="eyebrow">Bitácora del auto</p>
+      <article className="auth-card login">
+        <span className="auth-logo">
+          <RacingFlagIcon size={52} />
+        </span>
         <h1>AnderCars</h1>
-        <p>Entra con la cuenta de Google que está autorizada. Las demás ven esta pantalla y ningún dato.</p>
+        <p className="lead">
+          Mantenimientos, reparaciones y kilometraje de tu auto, en un solo lugar.
+        </p>
+        <p className="auth-security">Acceso privado con tu cuenta autorizada de Google.</p>
         {error && <p className="error">{error}</p>}
         <button className="btn primary" type="button" onClick={() => void onClick()} disabled={pending}>
+          {!pending && <LogIn size={18} />}
           {pending ? 'Redirigiendo…' : 'Entrar con Google'}
         </button>
       </article>

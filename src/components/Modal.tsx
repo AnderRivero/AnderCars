@@ -1,11 +1,16 @@
 import { useEffect, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 export function Modal({
   title,
+  subtitle,
+  wide = false,
   onClose,
   children,
 }: {
   title: string
+  subtitle?: string
+  wide?: boolean
   onClose: () => void
   children: ReactNode
 }) {
@@ -20,16 +25,19 @@ export function Modal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal"
+        className={wide ? 'modal wide' : 'modal'}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-head">
-          <h2 id="modal-title">{title}</h2>
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Cerrar
+          <div className="modal-titles">
+            <h2 id="modal-title">{title}</h2>
+            {subtitle && <p>{subtitle}</p>}
+          </div>
+          <button type="button" className="icon-btn" aria-label="Cerrar" title="Cerrar" onClick={onClose}>
+            <X size={19} />
           </button>
         </div>
         {children}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { Pencil, Trash2 } from 'lucide-react'
 import { deleteEntry, saveOdometerEntry } from '../lib/api'
 import { useData } from '../data/DataProvider'
 import { carLabel, formatDate, formatKm, kmInputValue, todayISO } from '../lib/format'
@@ -183,11 +184,23 @@ export function OdometerPage() {
                     <td>{car ? carLabel(car) : 'Auto'}</td>
                     <td>{formatKm(entry.odometer)} km</td>
                     <td className="row-actions">
-                      <button className="btn ghost" type="button" onClick={() => startEdit(entry)}>
-                        Editar
+                      <button
+                        className="icon-action"
+                        type="button"
+                        aria-label="Editar lectura"
+                        title="Editar"
+                        onClick={() => startEdit(entry)}
+                      >
+                        <Pencil size={16} />
                       </button>
-                      <button className="btn danger" type="button" onClick={() => void onDelete(entry)}>
-                        Eliminar
+                      <button
+                        className="icon-action danger"
+                        type="button"
+                        aria-label="Eliminar lectura"
+                        title="Eliminar"
+                        onClick={() => void onDelete(entry)}
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>

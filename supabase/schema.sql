@@ -224,8 +224,8 @@ declare
   vehicle_model text;
   history_row record;
   service_name text;
-  service_id uuid;
-  entry_id uuid;
+  new_service_id uuid;
+  new_entry_id uuid;
   inserted_count integer := 0;
   skipped_count integer := 0;
 begin
@@ -312,7 +312,7 @@ begin
       nullif(btrim(coalesce(history_row.notes, '')), ''),
       btrim(history_row.source_row_id)
     )
-    returning id into entry_id;
+    returning id into new_entry_id;
 
     if history_row.kind = 'service' then
       for service_name in
@@ -323,27 +323,27 @@ begin
           continue;
         end if;
 
-        service_id := null;
+        new_service_id := null;
         select services.id
-        into service_id
+        into new_service_id
         from public.services as services
         where services.name_key = lower(service_name);
 
-        if service_id is null then
+        if new_service_id is null then
           insert into public.services (name)
           values (service_name)
-          returning id into service_id;
+          returning id into new_service_id;
         end if;
 
         insert into public.entry_services (entry_id, service_id)
-        values (entry_id, service_id)
+        values (new_entry_id, new_service_id)
         on conflict do nothing;
       end loop;
 
       if not exists (
         select 1
         from public.entry_services as links
-        where links.entry_id = entry_id
+        where links.entry_id = new_entry_id
       ) then
         raise exception 'La fila % no tiene servicios.', history_row.source_row_id;
       end if;

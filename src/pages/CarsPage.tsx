@@ -1,4 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
+import { Fab } from '../components/Fab'
+import { Modal } from '../components/Modal'
 import {
   deleteCar,
   insertCar,
@@ -22,6 +25,7 @@ const emptyForm = {
 
 export function CarsPage() {
   const { cars, loading, refresh } = useData()
+  const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [file, setFile] = useState<File | null>(null)
@@ -58,9 +62,16 @@ export function CarsPage() {
     setFile(null)
     setRemovePhoto(false)
     setError(null)
+    setModalOpen(true)
+  }
+
+  function openNew() {
+    reset()
+    setModalOpen(true)
   }
 
   function reset() {
+    setModalOpen(false)
     setEditingId(null)
     setForm(emptyForm)
     setFile(null)
@@ -149,86 +160,23 @@ export function CarsPage() {
     }
   }
 
+  const editingCar = cars.find((car) => car.id === editingId) ?? null
+
   return (
     <>
       <div className="page-head">
         <div>
           <h1>Autos</h1>
-          <p className="lead">Marca, modelo, año, una foto opcional y notas.</p>
+          <p className="lead">Tu garaje: marca, modelo, año, foto y notas de cada vehículo.</p>
         </div>
       </div>
 
-      <form className="card form-grid" onSubmit={(event) => void onSubmit(event)}>
-        <label className="field">
-          <span>Marca</span>
-          <input
-            value={form.brand}
-            onChange={(event) => setForm({ ...form, brand: event.target.value })}
-            required
-          />
-        </label>
-        <label className="field">
-          <span>Modelo</span>
-          <input
-            value={form.model}
-            onChange={(event) => setForm({ ...form, model: event.target.value })}
-            required
-          />
-        </label>
-        <label className="field">
-          <span>Año</span>
-          <input
-            inputMode="numeric"
-            value={form.year}
-            onChange={(event) => setForm({ ...form, year: event.target.value })}
-            placeholder="Opcional"
-          />
-        </label>
-        <label className="field">
-          <span>Foto</span>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null)
-              setRemovePhoto(false)
-            }}
-          />
-        </label>
-        <label className="field full">
-          <span>Notas</span>
-          <textarea
-            rows={3}
-            value={form.notes}
-            onChange={(event) => setForm({ ...form, notes: event.target.value })}
-          />
-        </label>
-        {editingId && cars.find((car) => car.id === editingId)?.photoPath && (
-          <label className="check full">
-            <input
-              type="checkbox"
-              checked={removePhoto}
-              onChange={(event) => setRemovePhoto(event.target.checked)}
-            />
-            Quitar la foto actual
-          </label>
-        )}
-        {error && <p className="error full">{error}</p>}
-        <div className="actions full">
-          <button className="btn primary" type="submit" disabled={saving}>
-            {saving ? 'Guardando…' : editingId ? 'Actualizar auto' : 'Guardar auto'}
-          </button>
-          {editingId && (
-            <button className="btn ghost" type="button" onClick={reset}>
-              Cancelar
-            </button>
-          )}
-        </div>
-        <p className="note full">La foto queda en un almacén privado. JPG, PNG o WebP, hasta 2 MB.</p>
-      </form>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       {loading ? (
         <p className="lead">Cargando autos…</p>
+      ) : cars.length === 0 ? (
+        <p className="note">Todavía no hay autos. Usa el botón + para registrar el primero.</p>
       ) : (
         <div className="car-grid">
           {cars.map((car) => (
@@ -239,21 +187,117 @@ export function CarsPage() {
                 <div className="photo-fallback">Sin foto</div>
               )}
               <div>
-                <h2>{carLabel(car)}</h2>
-                <p>{formatKm(car.odometer)} km</p>
-                {car.notes && <p className="note">{car.notes}</p>}
-                <div className="actions">
-                  <button className="btn ghost" type="button" onClick={() => edit(car)}>
-                    Editar
-                  </button>
-                  <button className="btn danger" type="button" onClick={() => void onDelete(car)}>
-                    Eliminar
-                  </button>
+                <div className="car-card-head">
+                  <h2>{carLabel(car)}</h2>
+                  <div className="row-actions">
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label={`Editar ${carLabel(car)}`}
+                      title="Editar"
+                      onClick={() => edit(car)}
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      className="icon-action danger"
+                      type="button"
+                      aria-label={`Eliminar ${carLabel(car)}`}
+                      title="Eliminar"
+                      onClick={() => void onDelete(car)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
+                <p className="car-km">{formatKm(car.odometer)} km</p>
+                {car.notes && <p className="note">{car.notes}</p>}
               </div>
             </article>
           ))}
         </div>
+      )}
+
+      <Fab label="Registrar nuevo auto" onClick={openNew} />
+
+      {modalOpen && (
+        <Modal
+          title={editingCar ? 'Actualizar auto' : 'Registrar nuevo auto'}
+          subtitle={
+            editingCar
+              ? `Estás editando ${carLabel(editingCar)}.`
+              : 'Agrega un vehículo a tu garaje. Solo la marca y el modelo son obligatorios.'
+          }
+          onClose={reset}
+        >
+          <form className="form-grid" onSubmit={(event) => void onSubmit(event)}>
+            <label className="field">
+              <span>Marca</span>
+              <input
+                autoFocus
+                value={form.brand}
+                onChange={(event) => setForm({ ...form, brand: event.target.value })}
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Modelo</span>
+              <input
+                value={form.model}
+                onChange={(event) => setForm({ ...form, model: event.target.value })}
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Año</span>
+              <input
+                inputMode="numeric"
+                value={form.year}
+                onChange={(event) => setForm({ ...form, year: event.target.value })}
+                placeholder="Opcional"
+              />
+            </label>
+            <label className="field">
+              <span>Foto</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => {
+                  setFile(event.target.files?.[0] ?? null)
+                  setRemovePhoto(false)
+                }}
+              />
+            </label>
+            <label className="field full">
+              <span>Notas</span>
+              <textarea
+                rows={3}
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+              />
+            </label>
+            {editingCar?.photoPath && (
+              <label className="check full">
+                <input
+                  type="checkbox"
+                  checked={removePhoto}
+                  onChange={(event) => setRemovePhoto(event.target.checked)}
+                />
+                Quitar la foto actual
+              </label>
+            )}
+            <p className="note full">La foto queda en un almacén privado. JPG, PNG o WebP, hasta 2 MB.</p>
+            {error && <p className="error full">{error}</p>}
+            <div className="actions full modal-actions">
+              <button className="btn ghost" type="button" onClick={reset}>
+                Cancelar
+              </button>
+              <button className="btn primary" type="submit" disabled={saving}>
+                {saving ? 'Guardando…' : editingCar ? 'Guardar cambios' : 'Registrar auto'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </>
   )

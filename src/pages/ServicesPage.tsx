@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { deleteService, saveService } from '../lib/api'
 import { Modal } from '../components/Modal'
 import { useData } from '../data/DataProvider'
@@ -125,6 +126,7 @@ export function ServicesPage() {
           </p>
         </div>
         <button className="btn primary" type="button" onClick={openNew}>
+          <Plus size={17} />
           Nuevo servicio
         </button>
       </div>
@@ -150,11 +152,23 @@ export function ServicesPage() {
                   <td>{service.name}</td>
                   <td>{intervalLabel(service)}</td>
                   <td className="row-actions">
-                    <button className="btn ghost" type="button" onClick={() => openEdit(service)}>
-                      Editar
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label={`Editar ${service.name}`}
+                      title="Editar"
+                      onClick={() => openEdit(service)}
+                    >
+                      <Pencil size={16} />
                     </button>
-                    <button className="btn danger" type="button" onClick={() => void onDelete(service)}>
-                      Eliminar
+                    <button
+                      className="icon-action danger"
+                      type="button"
+                      aria-label={`Eliminar ${service.name}`}
+                      title="Eliminar"
+                      onClick={() => void onDelete(service)}
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
