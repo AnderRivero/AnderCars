@@ -62,7 +62,7 @@ export function DashboardPage() {
           <p>Todavía no hay autos.</p>
           <p>
             Puedes crear uno en <Link to="/autos">Autos</Link> o importar el historial desde{' '}
-            <Link to="/pits">Entrada a pits</Link>. El archivo trae el Chevrolet Aveo Lt Speed, sin el año.
+            <Link to="/configuracion">Configuración</Link>. El archivo trae el Chevrolet Aveo Lt Speed, sin el año.
           </p>
         </section>
       )}
@@ -101,10 +101,13 @@ export function DashboardPage() {
               {alerts.length > 0 && <span className="count-pill warn">{alerts.length}</span>}
             </h2>
             {!recurrent && (
-              <p className="note">
-                Marca un servicio como recurrente en <Link to="/servicios">Servicios</Link> e indica cada
-                cuántos kilómetros y cada cuántos meses. El aviso salta con el que se cumpla primero.
-              </p>
+              <div className="alert soon">
+                <span className="lamp" aria-hidden="true" />
+                <p>
+                  Marca un servicio como recurrente en <Link to="/servicios">Servicios</Link> e indica cada
+                  cuántos kilómetros y cada cuántos meses. El aviso salta con el que se cumpla primero.
+                </p>
+              </div>
             )}
             {recurrent && alerts.length === 0 && <p className="note">Nada pendiente por ahora.</p>}
             <ul className="alert-list">

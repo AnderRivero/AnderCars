@@ -1,9 +1,8 @@
-import { useRef, useState } from 'react'
-import { Pencil, Trash2, Upload } from 'lucide-react'
+import { useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { EntryModal } from '../components/EntryModal'
 import { Fab } from '../components/Fab'
-import { deleteEntry, importHistory } from '../lib/api'
-import { parseFuelLog } from '../lib/csv'
+import { deleteEntry } from '../lib/api'
 import { useData } from '../data/DataProvider'
 import { carLabel, formatDate, formatKm, formatUsd } from '../lib/format'
 import { errorText } from '../lib/validate'
@@ -11,11 +10,8 @@ import type { Entry } from '../lib/types'
 
 export function EntriesPage() {
   const { cars, services, entries, loading, refresh } = useData()
-  const fileRef = useRef<HTMLInputElement>(null)
   const [modal, setModal] = useState<{ entry: Entry | null } | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [importMessage, setImportMessage] = useState<string | null>(null)
-  const [importing, setImporting] = useState(false)
 
   const serviceEntries = entries.filter((entry) => entry.kind === 'service')
 
@@ -30,48 +26,6 @@ export function EntriesPage() {
     }
   }
 
-  async function onImport(file: File) {
-    setImporting(true)
-    setError(null)
-    setImportMessage(null)
-    try {
-      const parsed = parseFuelLog(await file.text())
-      let inserted = 0
-      let skipped = 0
-      for (const vehicle of parsed.vehicles) {
-        const result = await importHistory({
-          brand: vehicle.brand,
-          model: vehicle.model,
-          rows: vehicle.rows.map((row) => ({
-            source_row_id: row.sourceRowId,
-            entry_date: row.entryDate,
-            odometer: row.odometer,
-            kind: row.kind,
-            workshop: row.workshop,
-            cost_usd: row.costUsd,
-            notes: row.notes,
-            services: row.services,
-          })),
-        })
-        inserted += result.inserted
-        skipped += result.skipped
-      }
-      await refresh()
-      const parts = [
-        `Se importaron ${inserted} entradas.`,
-        `Se omitieron ${parsed.skippedFuel} cargas de gasolina.`,
-      ]
-      if (skipped > 0) parts.push(`${skipped} ya estaban cargadas.`)
-      if (parsed.skippedInvalid > 0) parts.push(`${parsed.skippedInvalid} filas no se pudieron leer.`)
-      setImportMessage(parts.join(' '))
-    } catch (err) {
-      setError(errorText(err))
-    } finally {
-      setImporting(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
-  }
-
   return (
     <>
       <div className="page-head">
@@ -79,23 +33,7 @@ export function EntriesPage() {
           <h1>Entrada a pits</h1>
           <p className="lead">Cada parada en boxes de tu auto: servicios y reparaciones, de la más reciente a la más antigua.</p>
         </div>
-        <label className="btn ghost file-btn">
-          <Upload size={16} />
-          {importing ? 'Importando…' : 'Importar historial'}
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            hidden
-            disabled={importing}
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              if (file) void onImport(file)
-            }}
-          />
-        </label>
       </div>
-      {importMessage && <p className="note success">{importMessage}</p>}
       {error && <p className="error">{error}</p>}
 
       {loading ? (
@@ -159,7 +97,7 @@ export function EntriesPage() {
           </table>
           {serviceEntries.length === 0 && (
             <p className="note">
-              Todavía no hay paradas en pits. Usa el botón + o importa <code>docs/Fuel_Log.csv</code>.
+              Todavía no hay paradas en pits. Usa el botón + para registrar una.
             </p>
           )}
         </div>

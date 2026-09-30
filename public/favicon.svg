@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="0" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff3a4b" />
+      <stop offset="1" stop-color="#b80d1b" />
+    </linearGradient>
+    <pattern id="checker" width="9" height="9" patternUnits="userSpaceOnUse">
+      <rect width="9" height="9" fill="#ffffff" />
+      <rect width="4.5" height="4.5" fill="#111418" />
+      <rect x="4.5" y="4.5" width="4.5" height="4.5" fill="#111418" />
+    </pattern>
+    <clipPath id="tile">
+      <rect width="72" height="72" rx="16" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="72" height="72" fill="url(#bg)" />
+    <g transform="translate(36 36) scale(0.86) translate(-36 -36)">
+      <g transform="translate(36 0) scale(-1 1) translate(-36 0) rotate(22 36 40)">
+        <rect x="34.6" y="7" width="2.8" height="59" rx="1.4" fill="#ffffff" />
+        <circle cx="36" cy="6" r="2.6" fill="#ffffff" />
+        <path
+          d="M37.4 8 C 43 4.5, 49 11, 58 7 L 58 25 C 49 29, 43 22.5, 37.4 26 Z"
+          fill="url(#checker)"
+          stroke="#ffffff"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+      </g>
+      <g transform="rotate(22 36 40)">
+        <rect x="34.6" y="7" width="2.8" height="59" rx="1.4" fill="#ffffff" />
+        <circle cx="36" cy="6" r="2.6" fill="#ffffff" />
+        <path
+          d="M37.4 8 C 43 4.5, 49 11, 58 7 L 58 25 C 49 29, 43 22.5, 37.4 26 Z"
+          fill="url(#checker)"
+          stroke="#ffffff"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+      </g>
+    </g>
+  </g>
+</svg>

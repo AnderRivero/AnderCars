@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { deleteService, saveService } from '../lib/api'
 import { Modal } from '../components/Modal'
@@ -164,7 +165,10 @@ export function ServicesPage() {
       {loading ? (
         <p className="lead">Cargando servicios…</p>
       ) : services.length === 0 ? (
-        <p className="note">Todavía no hay servicios. Puedes crearlos aquí o importar el historial.</p>
+        <p className="note">
+          Todavía no hay servicios. Puedes crearlos aquí o importar el historial desde{' '}
+          <Link to="/configuracion">Configuración</Link>.
+        </p>
       ) : (
         <div className="table-wrap card">
           <table>

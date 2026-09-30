@@ -6,6 +6,7 @@ import {
   Gauge,
   LayoutDashboard,
   LogOut,
+  Settings,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ const navigation: Array<{ to: string; label: string; short?: string; icon: Lucid
   { to: '/servicios', label: 'Servicios', icon: Wrench },
   { to: '/pits', label: 'Entrada a pits', short: 'Pits', icon: Flag },
   { to: '/odometro', label: 'Odómetro', icon: Gauge },
+  { to: '/configuracion', label: 'Configuración', short: 'Ajustes', icon: Settings },
 ]
 
 export function Layout() {

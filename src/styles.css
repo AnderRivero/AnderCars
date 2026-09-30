@@ -127,7 +127,7 @@ pre {
   bottom: calc(10px + env(safe-area-inset-bottom));
   height: 66px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
   background: rgba(20, 24, 29, 0.94);
@@ -143,7 +143,7 @@ pre {
   justify-content: center;
   gap: 3px;
   color: #7f8792;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 650;
   text-decoration: none;
 }
@@ -337,6 +337,10 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .btn.ghost { border-color: var(--line); background: rgba(255, 255, 255, 0.02); color: var(--muted-strong); }
 .btn.danger { border-color: rgba(255, 107, 112, 0.2); background: var(--danger-bg); color: var(--danger); }
 .file-btn input { display: none; }
+.settings-list { display: grid; gap: 14px; }
+.settings-card { display: grid; gap: 12px; justify-items: start; }
+.settings-card h2 { display: flex; align-items: center; gap: 8px; }
+.settings-card .btn { min-width: 210px; }
 
 .error {
   margin: 0;

@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { EntriesPage } from './pages/EntriesPage'
 import { OdometerPage } from './pages/OdometerPage'
 import { ServicesPage } from './pages/ServicesPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { errorText } from './lib/validate'
 
 export function App() {
@@ -45,6 +46,7 @@ function Gate() {
             <Route path="pits" element={<EntriesPage />} />
             <Route path="entradas" element={<Navigate to="/pits" replace />} />
             <Route path="odometro" element={<OdometerPage />} />
+            <Route path="configuracion" element={<SettingsPage />} />
           </Route>
         </Routes>
       </HashRouter>
