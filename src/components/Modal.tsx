@@ -5,12 +5,14 @@ export function Modal({
   title,
   subtitle,
   wide = false,
+  stacked = false,
   onClose,
   children,
 }: {
   title: string
   subtitle?: string
   wide?: boolean
+  stacked?: boolean
   onClose: () => void
   children: ReactNode
 }) {
@@ -23,7 +25,7 @@ export function Modal({
   }, [onClose])
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={stacked ? 'modal-backdrop stacked' : 'modal-backdrop'} onClick={onClose}>
       <div
         className={wide ? 'modal wide' : 'modal'}
         role="dialog"

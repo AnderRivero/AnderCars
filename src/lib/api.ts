@@ -153,18 +153,21 @@ export async function deleteCar(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function saveService(input: ServiceInput & { id?: string }): Promise<void> {
+export async function saveService(input: ServiceInput & { id?: string }): Promise<string> {
   const row = {
     name: input.name.trim(),
     is_recurrent: input.isRecurrent,
     interval_km: input.isRecurrent ? input.intervalKm : null,
     interval_months: input.isRecurrent ? input.intervalMonths : null,
   }
-  const query = input.id
-    ? client().from('services').update(row).eq('id', input.id)
-    : client().from('services').insert(row)
-  const { error } = await query
+  if (input.id) {
+    const { error } = await client().from('services').update(row).eq('id', input.id)
+    if (error) throw error
+    return input.id
+  }
+  const { data, error } = await client().from('services').insert(row).select('id').single()
   if (error) throw error
+  return data.id
 }
 
 export async function deleteService(id: string): Promise<void> {

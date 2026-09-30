@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, Plus, RefreshCw, Search } from 'lucide-react'
 import { Modal } from './Modal'
+import { ServiceModal } from './ServiceModal'
 import { useData } from '../data/DataProvider'
 import { saveServiceEntry } from '../lib/api'
 import { carLabel, formatDate, kmInputValue, todayISO } from '../lib/format'
@@ -34,6 +35,15 @@ export function EntryModal({
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [creatingService, setCreatingService] = useState(false)
+  const creatingRef = useRef(false)
+  creatingRef.current = creatingService
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  const requestClose = useCallback(() => {
+    if (creatingRef.current) return
+    onCloseRef.current()
+  }, [])
 
   const workshops = [
     ...new Set(entries.map((item) => item.workshop).filter((value): value is string => Boolean(value))),
@@ -112,6 +122,7 @@ export function EntryModal({
   }
 
   return (
+    <>
     <Modal
       wide
       title={entry ? 'Editar entrada a pits' : 'Nueva entrada a pits'}
@@ -120,7 +131,7 @@ export function EntryModal({
           ? `Registrada el ${formatDate(entry.entryDate)}.`
           : 'Registra un servicio o una reparación. El kilometraje no puede bajar de la última lectura.'
       }
-      onClose={onClose}
+      onClose={requestClose}
     >
       {cars.length === 0 ? (
         <p className="note">
@@ -171,6 +182,10 @@ export function EntryModal({
                   Limpiar
                 </button>
               )}
+              <button className="btn ghost compact" type="button" onClick={() => setCreatingService(true)}>
+                <Plus size={14} />
+                Nuevo servicio
+              </button>
             </div>
             <div className="search-input">
               <Search size={16} />
@@ -202,17 +217,9 @@ export function EntryModal({
               })}
               {visibleServices.length === 0 && (
                 <p className="note">
-                  {services.length === 0 ? (
-                    <>
-                      Todavía no hay servicios. Créalos en{' '}
-                      <Link to="/servicios" onClick={onClose}>
-                        Servicios
-                      </Link>
-                      .
-                    </>
-                  ) : (
-                    'Ningún servicio coincide con la búsqueda.'
-                  )}
+                  {services.length === 0
+                    ? 'Todavía no hay servicios. Usa Nuevo servicio para crear el primero.'
+                    : 'Ningún servicio coincide con la búsqueda. Puedes crearlo con Nuevo servicio.'}
                 </p>
               )}
             </div>
@@ -238,7 +245,7 @@ export function EntryModal({
           </label>
           {error && <p className="error full">{error}</p>}
           <div className="actions full modal-actions">
-            <button className="btn ghost" type="button" onClick={onClose}>
+            <button className="btn ghost" type="button" onClick={requestClose}>
               Cancelar
             </button>
             <button className="btn primary" type="submit" disabled={saving}>
@@ -248,5 +255,21 @@ export function EntryModal({
         </form>
       )}
     </Modal>
+    {creatingService && (
+      <ServiceModal
+        initialName={serviceQuery}
+        onClose={() => setCreatingService(false)}
+        onSaved={(service) => {
+          setSelected((current) => new Set(current).add(service.id))
+          setServiceQuery('')
+        }}
+        onUseExisting={(service) => {
+          setSelected((current) => new Set(current).add(service.id))
+          setServiceQuery('')
+          setCreatingService(false)
+        }}
+      />
+    )}
+    </>
   )
 }

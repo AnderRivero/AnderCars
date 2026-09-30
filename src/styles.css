@@ -335,6 +335,7 @@ input[type="checkbox"] { accent-color: var(--accent); }
 }
 .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg, #ff4d5c, #dc1a2a); }
 .btn.ghost { border-color: var(--line); background: rgba(255, 255, 255, 0.02); color: var(--muted-strong); }
+.btn.compact { min-height: 32px; padding: 0 11px; font-size: 0.78rem; margin-left: auto; }
 .btn.danger { border-color: rgba(255, 107, 112, 0.2); background: var(--danger-bg); color: var(--danger); }
 .file-btn input { display: none; }
 .settings-list { display: grid; gap: 14px; }
@@ -450,6 +451,7 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.018); }
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(6px);
 }
+.modal-backdrop.stacked { z-index: 130; }
 .modal {
   width: min(560px, 100%);
   max-height: calc(100vh - 32px);
@@ -574,7 +576,7 @@ td.row-actions .icon-action + .icon-action { margin-left: 6px; }
 .car-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .car-km { color: var(--muted-strong); font-weight: 650; }
 
-.field-head { display: flex; align-items: center; gap: 10px; }
+.field-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .field-head > span:first-child { color: var(--muted-strong); font-size: 0.78rem; font-weight: 700; }
 .count-pill {
   padding: 2px 9px;
@@ -586,7 +588,6 @@ td.row-actions .icon-action + .icon-action { margin-left: 6px; }
 }
 .count-pill.on { border-color: rgba(239, 26, 45, 0.45); background: rgba(239, 26, 45, 0.12); color: #ff8f99; }
 .link-btn {
-  margin-left: auto;
   padding: 0;
   border: 0;
   background: none;
