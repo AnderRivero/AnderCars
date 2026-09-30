@@ -20,7 +20,7 @@ export function EntriesPage() {
   const serviceEntries = entries.filter((entry) => entry.kind === 'service')
 
   async function onDelete(entry: Entry) {
-    const confirmed = window.confirm('¿Eliminar esta entrada?')
+    const confirmed = window.confirm('¿Eliminar esta entrada a pits?')
     if (!confirmed) return
     try {
       await deleteEntry(entry.id)
@@ -76,8 +76,8 @@ export function EntriesPage() {
     <>
       <div className="page-head">
         <div>
-          <h1>Entradas</h1>
-          <p className="lead">Servicios y reparaciones registrados, del más reciente al más antiguo.</p>
+          <h1>Entrada a pits</h1>
+          <p className="lead">Cada parada en boxes de tu auto: servicios y reparaciones, de la más reciente a la más antigua.</p>
         </div>
         <label className="btn ghost file-btn">
           <Upload size={16} />
@@ -99,7 +99,7 @@ export function EntriesPage() {
       {error && <p className="error">{error}</p>}
 
       {loading ? (
-        <p className="lead">Cargando entradas…</p>
+        <p className="lead">Cargando paradas…</p>
       ) : (
         <div className="table-wrap card">
           <table>
@@ -136,7 +136,7 @@ export function EntriesPage() {
                       <button
                         className="icon-action"
                         type="button"
-                        aria-label="Editar entrada"
+                        aria-label="Editar entrada a pits"
                         title="Editar"
                         onClick={() => setModal({ entry })}
                       >
@@ -145,7 +145,7 @@ export function EntriesPage() {
                       <button
                         className="icon-action danger"
                         type="button"
-                        aria-label="Eliminar entrada"
+                        aria-label="Eliminar entrada a pits"
                         title="Eliminar"
                         onClick={() => void onDelete(entry)}
                       >
@@ -159,13 +159,13 @@ export function EntriesPage() {
           </table>
           {serviceEntries.length === 0 && (
             <p className="note">
-              Todavía no hay entradas de servicio. Usa el botón + o importa <code>docs/Fuel_Log.csv</code>.
+              Todavía no hay paradas en pits. Usa el botón + o importa <code>docs/Fuel_Log.csv</code>.
             </p>
           )}
         </div>
       )}
 
-      <Fab label="Nueva entrada" onClick={() => setModal({ entry: null })} />
+      <Fab label="Nueva entrada a pits" onClick={() => setModal({ entry: null })} />
       {modal && <EntryModal entry={modal.entry} onClose={() => setModal(null)} />}
     </>
   )

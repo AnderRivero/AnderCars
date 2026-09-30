@@ -2,11 +2,12 @@ import { NavLink, Outlet } from 'react-router-dom'
 import {
   Bell,
   CarFront,
+  Flag,
   Gauge,
   LayoutDashboard,
   LogOut,
-  NotebookPen,
   Wrench,
+  type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { useData } from '../data/DataProvider'
@@ -14,11 +15,11 @@ import { RacingFlagIcon } from './RacingFlagIcon'
 import { todayISO } from '../lib/format'
 import { buildAlerts } from '../lib/metrics'
 
-const navigation = [
+const navigation: Array<{ to: string; label: string; short?: string; icon: LucideIcon; end?: boolean }> = [
   { to: '/', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/autos', label: 'Autos', icon: CarFront },
   { to: '/servicios', label: 'Servicios', icon: Wrench },
-  { to: '/entradas', label: 'Entradas', icon: NotebookPen },
+  { to: '/pits', label: 'Entrada a pits', short: 'Pits', icon: Flag },
   { to: '/odometro', label: 'Odómetro', icon: Gauge },
 ]
 
@@ -84,13 +85,13 @@ export function Layout() {
       </main>
 
       <nav className="mobile-nav" aria-label="Navegación principal">
-        {navigation.map(({ to, label, icon: Icon, end }) => (
+        {navigation.map(({ to, label, short, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end}>
             <span className="mobile-icon">
               <Icon size={21} />
               {to === '/' && overdue > 0 && <span className="mobile-badge">{overdue}</span>}
             </span>
-            <span>{label}</span>
+            <span>{short ?? label}</span>
           </NavLink>
         ))}
       </nav>

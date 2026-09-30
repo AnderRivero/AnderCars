@@ -114,7 +114,7 @@ export function EntryModal({
   return (
     <Modal
       wide
-      title={entry ? 'Editar entrada' : 'Nueva entrada'}
+      title={entry ? 'Editar entrada a pits' : 'Nueva entrada a pits'}
       subtitle={
         entry
           ? `Registrada el ${formatDate(entry.entryDate)}.`
@@ -242,7 +242,7 @@ export function EntryModal({
               Cancelar
             </button>
             <button className="btn primary" type="submit" disabled={saving}>
-              {saving ? 'Guardando…' : entry ? 'Guardar cambios' : 'Registrar entrada'}
+              {saving ? 'Guardando…' : entry ? 'Guardar cambios' : 'Registrar parada'}
             </button>
           </div>
         </form>

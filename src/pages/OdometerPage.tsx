@@ -110,7 +110,7 @@ export function OdometerPage() {
       {cars.length === 0 && !loading && (
         <p className="note">
           Crea un auto en <Link to="/autos">Autos</Link> o importa el historial en{' '}
-          <Link to="/entradas">Entradas</Link>.
+          <Link to="/pits">Entrada a pits</Link>.
         </p>
       )}
 

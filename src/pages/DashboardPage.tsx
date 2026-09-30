@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CircleDollarSign, Gauge, MapPinned, NotebookText } from 'lucide-react'
+import { CircleDollarSign, Gauge, MapPinned, NotebookText, TriangleAlert } from 'lucide-react'
 import { EntryModal } from '../components/EntryModal'
 import { Fab } from '../components/Fab'
 import { useData } from '../data/DataProvider'
@@ -62,7 +62,7 @@ export function DashboardPage() {
           <p>Todavía no hay autos.</p>
           <p>
             Puedes crear uno en <Link to="/autos">Autos</Link> o importar el historial desde{' '}
-            <Link to="/entradas">Entradas</Link>. El archivo trae el Chevrolet Aveo Lt Speed, sin el año.
+            <Link to="/pits">Entrada a pits</Link>. El archivo trae el Chevrolet Aveo Lt Speed, sin el año.
           </p>
         </section>
       )}
@@ -89,13 +89,17 @@ export function DashboardPage() {
               <strong>{formatUsd(spent)}</strong>
             </article>
             <article className="stat">
-              <span><NotebookText size={16} /> Entradas</span>
+              <span><NotebookText size={16} /> Paradas en pits</span>
               <strong>{carEntries.length}</strong>
             </article>
           </section>
 
           <section className="stack">
-            <h2>Alertas</h2>
+            <h2 className="section-title">
+              <TriangleAlert size={19} className="warn-icon" />
+              Alertas
+              {alerts.length > 0 && <span className="count-pill warn">{alerts.length}</span>}
+            </h2>
             {!recurrent && (
               <p className="note">
                 Marca un servicio como recurrente en <Link to="/servicios">Servicios</Link> e indica cada
@@ -106,8 +110,11 @@ export function DashboardPage() {
             <ul className="alert-list">
               {alerts.map((alert) => (
                 <li key={alert.serviceId} className={`alert ${alert.status}`}>
-                  <strong>{alert.serviceName}</strong>
-                  <p>{alert.summary}</p>
+                  <span className="lamp" aria-hidden="true" />
+                  <div>
+                    <strong>{alert.serviceName}</strong>
+                    <p>{alert.summary}</p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -176,7 +183,7 @@ export function DashboardPage() {
             </div>
             <div className="stack">
               <h2>Gasto por servicio</h2>
-              <p className="note">Si una entrada tiene varios servicios, el costo se reparte en partes iguales.</p>
+              <p className="note">Si una parada tiene varios servicios, el costo se reparte en partes iguales.</p>
               {byService.length === 0 ? (
                 <p className="note">Todavía no hay costos asociados a servicios.</p>
               ) : (
@@ -235,7 +242,7 @@ export function DashboardPage() {
         </>
       )}
 
-      <Fab label="Nueva entrada" onClick={() => setCreatingEntry(true)} />
+      <Fab label="Nueva entrada a pits" onClick={() => setCreatingEntry(true)} />
       {creatingEntry && <EntryModal defaultCarId={carId} onClose={() => setCreatingEntry(false)} />}
     </>
   )

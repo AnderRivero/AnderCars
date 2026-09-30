@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { deleteService, saveService } from '../lib/api'
 import { Modal } from '../components/Modal'
 import { useData } from '../data/DataProvider'
@@ -22,11 +22,43 @@ const emptyDraft: Draft = {
   intervalMonths: '',
 }
 
+const STOPWORDS = new Set(['del', 'los', 'las', 'con', 'para', 'por'])
+
+function normalize(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findSimilar(services: Service[], name: string, excludeId?: string) {
+  const query = normalize(name)
+  if (query.length < 2) return { matches: [] as Service[], exact: false }
+  const others = services.filter((service) => service.id !== excludeId)
+  const exact = others.some((service) => normalize(service.name) === query)
+  const words = query.split(' ').filter((word) => word.length >= 3 && !STOPWORDS.has(word))
+  const needed = words.length <= 2 ? words.length : words.length - 1
+  const scored = others
+    .map((service) => {
+      const candidate = normalize(service.name)
+      if (candidate === query) return { service, score: 1000 }
+      if (candidate.includes(query) || query.includes(candidate)) return { service, score: 100 }
+      const hits = words.filter((word) => candidate.includes(word)).length
+      return { service, score: needed > 0 && hits >= needed ? hits : 0 }
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.service.name.localeCompare(b.service.name, 'es'))
+  return { matches: scored.slice(0, 6).map((item) => item.service), exact }
+}
+
 export function ServicesPage() {
   const { services, loading, refresh } = useData()
   const [draft, setDraft] = useState<Draft | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const similar = draft ? findSimilar(services, draft.name, draft.id) : { matches: [], exact: false }
 
   function openNew() {
     setDraft(emptyDraft)
@@ -52,10 +84,7 @@ export function ServicesPage() {
       setError('Escribe el nombre del servicio.')
       return
     }
-    const duplicate = services.some(
-      (service) => service.id !== draft.id && service.name.trim().toLowerCase() === name.toLowerCase(),
-    )
-    if (duplicate) {
+    if (findSimilar(services, name, draft.id).exact) {
       setError('Ya existe un servicio con ese nombre.')
       return
     }
@@ -185,11 +214,35 @@ export function ServicesPage() {
               <span>Nombre</span>
               <input
                 autoFocus
+                autoComplete="off"
                 value={draft.name}
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
                 required
               />
             </label>
+            {similar.matches.length > 0 && (
+              <div className={similar.exact ? 'suggest full exact' : 'suggest full'}>
+                <p className="suggest-title">
+                  {similar.exact ? (
+                    <>
+                      <TriangleAlert size={15} />
+                      Ya existe un servicio con ese nombre.
+                    </>
+                  ) : (
+                    'Ya tienes servicios parecidos:'
+                  )}
+                </p>
+                <div className="suggest-list">
+                  {similar.matches.map((service) => (
+                    <button key={service.id} type="button" className="chip" onClick={() => openEdit(service)}>
+                      <Pencil size={13} />
+                      <span>{service.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="note">Toca uno para editarlo en lugar de crear un duplicado.</p>
+              </div>
+            )}
             <label className="check full">
               <input
                 type="checkbox"
@@ -223,7 +276,7 @@ export function ServicesPage() {
             )}
             {error && <p className="error full">{error}</p>}
             <div className="actions full">
-              <button className="btn primary" type="submit" disabled={saving}>
+              <button className="btn primary" type="submit" disabled={saving || similar.exact}>
                 {saving ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
