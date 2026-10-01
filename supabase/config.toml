@@ -1,0 +1,4 @@
+project_id = "andercars"
+
+[functions.check-alerts]
+verify_jwt = true

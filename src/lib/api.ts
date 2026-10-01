@@ -192,6 +192,7 @@ export async function saveServiceEntry(input: EntryInput): Promise<void> {
     const { error } = await client().from('entries').update(row).eq('id', input.id)
     if (error) throw error
     await replaceEntryServices(input.id, input.serviceIds)
+    queueAlertCheck()
     return
   }
 
@@ -204,6 +205,7 @@ export async function saveServiceEntry(input: EntryInput): Promise<void> {
     await client().from('entries').delete().eq('id', id)
     throw linkError
   }
+  queueAlertCheck()
 }
 
 export async function saveOdometerEntry(input: OdometerInput): Promise<void> {
@@ -221,11 +223,13 @@ export async function saveOdometerEntry(input: OdometerInput): Promise<void> {
     const { error } = await client().from('entries').update(row).eq('id', input.id)
     if (error) throw error
     await replaceEntryServices(input.id, [])
+    queueAlertCheck()
     return
   }
 
   const { error } = await client().from('entries').insert(row)
   if (error) throw error
+  queueAlertCheck()
 }
 
 export async function deleteEntry(id: string): Promise<void> {
@@ -312,6 +316,12 @@ export async function importHistory(payload: ImportPayload): Promise<{ inserted:
     inserted: Number(record.inserted ?? 0),
     skipped: Number(record.skipped ?? 0),
   }
+}
+
+function queueAlertCheck(): void {
+  void client()
+    .functions.invoke('check-alerts', { body: {} })
+    .catch(() => undefined)
 }
 
 function emptyToNull(value: string | null): string | null {

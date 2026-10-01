@@ -64,6 +64,26 @@ La clave anon queda dentro del JavaScript público. Así está pensado Supabase:
 - Base de 500 MB, 1 GB de archivos y el volumen de este historial caben en el plan gratis.
 - `docs/Fuel_Log.csv` fue la migración inicial y no hace falta subirlo. Los respaldos de ahora son JSON, desde **Configuración**.
 
+## Avisos por correo
+
+Un correo cuando un servicio recurrente pasa a "pronto", y otro cuando pasa a "vencido". No se repite el mismo aviso. La revisión del día corre a las 8:00, hora de Venezuela. Registrar un kilometraje o una parada también dispara la revisión en ese momento.
+
+1. Crea una cuenta en [Resend](https://resend.com) con `rivero.ander@gmail.com` y genera una API key.
+2. En Supabase, vuelve a ejecutar `supabase/schema.sql`. No borra los datos; agrega la tabla de avisos.
+3. En **Edge Functions → Secrets** carga `RESEND_API_KEY`, `CRON_SECRET` (una frase larga que inventes), `ALERT_EMAIL` y `ALERT_FROM`.
+4. Desde esta carpeta, con el ref de tu proyecto (el subdominio de la URL de Supabase):
+
+```bash
+npx supabase login
+npx supabase link --project-ref TU_REF
+npx supabase functions deploy check-alerts --project-ref TU_REF
+```
+
+5. En **Database → Extensions** activa `pg_cron` y `pg_net`.
+6. Abre `supabase/schedule-alert-email.sql`, reemplaza los tres `REEMPLAZA_...` en el SQL Editor y ejecútalo. No guardes esas claves en el repositorio. `CRON_SECRET` tiene que coincidir con el secreto del paso 3.
+
+Sin un dominio verificado, Resend solo entrega a tu propio correo y el remitente queda como `onboarding@resend.dev`. La primera ejecución manda un solo correo con lo que ya esté pronto o vencido.
+
 ## Pantallas
 
 - **Resumen:** alertas, últimos movimientos, kilometraje por año y gastos.

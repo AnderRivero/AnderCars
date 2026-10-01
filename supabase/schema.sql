@@ -495,6 +495,102 @@ $$;
 revoke all on function public.restore_backup(jsonb) from public, anon;
 grant execute on function public.restore_backup(jsonb) to authenticated;
 
+-- Un aviso por cada vez que un servicio pasa a "pronto" o a "vencido"
+-- desde la última vez que se registró. La app no escribe esta tabla.
+create table if not exists public.alert_notices (
+  car_id uuid not null references public.cars (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
+  status text not null check (status in ('soon', 'overdue')),
+  anchor_entry_id uuid not null references public.entries (id) on delete cascade,
+  notified_at timestamptz not null default now(),
+  primary key (car_id, service_id, status, anchor_entry_id)
+);
+
+alter table public.alert_notices enable row level security;
+revoke all on public.alert_notices from anon, authenticated;
+grant all on public.alert_notices to service_role;
+
+create or replace function public.claim_alert_notices(payload jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  claimed jsonb;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'No autorizado';
+  end if;
+
+  with incoming as (
+    select item.car_id, item.service_id, item.status, item.anchor_entry_id
+    from jsonb_to_recordset(coalesce(payload, '[]'::jsonb)) as item (
+      car_id uuid,
+      service_id uuid,
+      status text,
+      anchor_entry_id uuid
+    )
+    where item.status in ('soon', 'overdue')
+      and item.car_id is not null
+      and item.service_id is not null
+      and item.anchor_entry_id is not null
+  ),
+  inserted as (
+    insert into public.alert_notices (car_id, service_id, status, anchor_entry_id)
+    select car_id, service_id, status, anchor_entry_id
+    from incoming
+    on conflict do nothing
+    returning car_id, service_id, status, anchor_entry_id
+  )
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'car_id', car_id,
+        'service_id', service_id,
+        'status', status,
+        'anchor_entry_id', anchor_entry_id
+      )
+    ),
+    '[]'::jsonb
+  )
+  into claimed
+  from inserted;
+
+  return claimed;
+end;
+$$;
+
+create or replace function public.release_alert_notices(payload jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'No autorizado';
+  end if;
+
+  delete from public.alert_notices as notices
+  using jsonb_to_recordset(coalesce(payload, '[]'::jsonb)) as item (
+    car_id uuid,
+    service_id uuid,
+    status text,
+    anchor_entry_id uuid
+  )
+  where notices.car_id = item.car_id
+    and notices.service_id = item.service_id
+    and notices.status = item.status
+    and notices.anchor_entry_id = item.anchor_entry_id;
+end;
+$$;
+
+revoke all on function public.claim_alert_notices(jsonb) from public, anon, authenticated;
+revoke all on function public.release_alert_notices(jsonb) from public, anon, authenticated;
+grant execute on function public.claim_alert_notices(jsonb) to service_role;
+grant execute on function public.release_alert_notices(jsonb) to service_role;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'car-photos',
