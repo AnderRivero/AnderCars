@@ -4,7 +4,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { deleteEntry, saveOdometerEntry } from '../lib/api'
 import { useData } from '../data/DataProvider'
 import { carLabel, formatDate, formatKm, kmInputValue, todayISO } from '../lib/format'
-import { errorText, minimumOdometer, parseDecimal, validateOdometer } from '../lib/validate'
+import { duplicateOdometerReading, errorText, minimumOdometer, parseDecimal, validateOdometer } from '../lib/validate'
 import type { Entry } from '../lib/types'
 
 export function OdometerPage() {
@@ -59,6 +59,10 @@ export function OdometerPage() {
       setError(kmError)
       return
     }
+    if (duplicateOdometerReading(entries, { id: editingId, carId, entryDate, odometer: km })) {
+      setError('Ya hay una lectura de este auto en esa fecha con el mismo kilometraje.')
+      return
+    }
 
     setSaving(true)
     setError(null)
@@ -109,8 +113,7 @@ export function OdometerPage() {
 
       {cars.length === 0 && !loading && (
         <p className="note">
-          Crea un auto en <Link to="/autos">Autos</Link> o importa el historial en{' '}
-          <Link to="/pits">Entrada a pits</Link>.
+          Crea un auto en <Link to="/autos">Autos</Link> antes de registrar el kilometraje.
         </p>
       )}
 

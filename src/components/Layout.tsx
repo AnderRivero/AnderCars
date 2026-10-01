@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
   CarFront,
@@ -28,6 +28,8 @@ const navigation: Array<{ to: string; label: string; short?: string; icon: Lucid
 export function Layout() {
   const auth = useAuth()
   const data = useData()
+  const navigate = useNavigate()
+  const location = useLocation()
   const today = todayISO()
   const overdue = data.cars.reduce((sum, car) => {
     return sum + buildAlerts(car, data.services, data.entries, today).filter((alert) => alert.status === 'overdue').length
@@ -47,10 +49,22 @@ export function Layout() {
         </div>
         <div className="session">
           {overdue > 0 && (
-            <span className="top-alert" title={`${overdue} alertas vencidas`}>
+            <button
+              type="button"
+              className="top-alert"
+              title={`${overdue} alertas vencidas. Ver en Resumen.`}
+              aria-label={`${overdue} alertas vencidas. Ir a las alertas.`}
+              onClick={() => {
+                if (location.pathname === '/') {
+                  document.getElementById('alertas')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  return
+                }
+                navigate('/', { state: { focus: 'alertas' } })
+              }}
+            >
               <Bell size={18} />
               <span>{overdue}</span>
-            </span>
+            </button>
           )}
           <span className="session-email">{auth.email}</span>
           <button

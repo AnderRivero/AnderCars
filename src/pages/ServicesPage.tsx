@@ -55,7 +55,7 @@ export function ServicesPage() {
         <p className="lead">Cargando servicios…</p>
       ) : services.length === 0 ? (
         <p className="note">
-          Todavía no hay servicios. Puedes crearlos aquí o importar el historial desde{' '}
+          Todavía no hay servicios. Puedes crearlos aquí o recuperar un respaldo desde{' '}
           <Link to="/configuracion">Configuración</Link>.
         </p>
       ) : (

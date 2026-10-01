@@ -133,7 +133,7 @@ export function mileageByYear(entries: Entry[]): YearMileage[] {
     (a, b) => a.entryDate.localeCompare(b.entryDate) || a.odometer - b.odometer,
   )
   const years = [...new Set(sorted.map((entry) => Number(entry.entryDate.slice(0, 4))))].sort(
-    (a, b) => a - b,
+    (a, b) => b - a,
   )
 
   return years.map((year) => {
@@ -157,7 +157,7 @@ export function costByYear(entries: Entry[]): Array<{ year: number; total: numbe
   }
   return [...totals.entries()]
     .map(([year, total]) => ({ year, total }))
-    .sort((a, b) => a.year - b.year)
+    .sort((a, b) => b.year - a.year)
 }
 
 export function costByService(

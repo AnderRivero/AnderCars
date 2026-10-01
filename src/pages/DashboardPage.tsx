@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { CircleDollarSign, Gauge, MapPinned, NotebookText, TriangleAlert } from 'lucide-react'
 import { EntryModal } from '../components/EntryModal'
 import { Fab } from '../components/Fab'
@@ -9,9 +9,16 @@ import { buildAlerts, costByService, costByYear, mileageByYear, observedKm } fro
 
 export function DashboardPage() {
   const { cars, services, entries, loading } = useData()
+  const location = useLocation()
   const [carId, setCarId] = useState('')
   const [creatingEntry, setCreatingEntry] = useState(false)
   const today = todayISO()
+
+  useEffect(() => {
+    const state = location.state as { focus?: string } | null
+    if (loading || state?.focus !== 'alertas') return
+    document.getElementById('alertas')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [loading, location.key, location.state])
 
   useEffect(() => {
     if (cars.length === 0) return
@@ -31,6 +38,9 @@ export function DashboardPage() {
   const spent = carEntries.reduce((sum, entry) => sum + (entry.costUsd ?? 0), 0)
   const maxYearKm = Math.max(...years.map((year) => year.km), 1)
   const recurrent = services.some((service) => service.isRecurrent)
+  const recent = [...carEntries]
+    .sort((a, b) => b.entryDate.localeCompare(a.entryDate) || b.odometer - a.odometer)
+    .slice(0, 8)
 
   if (loading) return <p className="lead">Cargando datos…</p>
 
@@ -61,8 +71,8 @@ export function DashboardPage() {
         <section className="card empty">
           <p>Todavía no hay autos.</p>
           <p>
-            Puedes crear uno en <Link to="/autos">Autos</Link> o importar el historial desde{' '}
-            <Link to="/configuracion">Configuración</Link>. El archivo trae el Chevrolet Aveo Lt Speed, sin el año.
+            Puedes crear uno en <Link to="/autos">Autos</Link> o recuperar un respaldo desde{' '}
+            <Link to="/configuracion">Configuración</Link>.
           </p>
         </section>
       )}
@@ -94,7 +104,7 @@ export function DashboardPage() {
             </article>
           </section>
 
-          <section className="stack">
+          <section className="stack" id="alertas">
             <h2 className="section-title">
               <TriangleAlert size={19} className="warn-icon" />
               Alertas
@@ -121,6 +131,41 @@ export function DashboardPage() {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section className="stack">
+            <h2>Últimos movimientos</h2>
+            {recent.length === 0 ? (
+              <p className="note">Todavía no hay movimientos de este auto.</p>
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Kilometraje</th>
+                      <th>Detalle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recent.map((entry) => (
+                      <tr key={entry.id}>
+                        <td>{formatDate(entry.entryDate)}</td>
+                        <td>{formatKm(entry.odometer)} km</td>
+                        <td>
+                          {entry.kind === 'odometer'
+                            ? 'Lectura de odómetro'
+                            : entry.serviceIds
+                                .map((id) => services.find((service) => service.id === id)?.name)
+                                .filter(Boolean)
+                                .join(', ') || 'Servicio'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <section className="stack">
@@ -212,36 +257,6 @@ export function DashboardPage() {
             </div>
           </section>
 
-          <section className="stack">
-            <h2>Últimos movimientos</h2>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Kilometraje</th>
-                    <th>Detalle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {carEntries.slice(0, 8).map((entry) => (
-                    <tr key={entry.id}>
-                      <td>{formatDate(entry.entryDate)}</td>
-                      <td>{formatKm(entry.odometer)} km</td>
-                      <td>
-                        {entry.kind === 'odometer'
-                          ? 'Lectura de odómetro'
-                          : entry.serviceIds
-                              .map((id) => services.find((service) => service.id === id)?.name)
-                              .filter(Boolean)
-                              .join(', ') || 'Servicio'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </>
       )}
 

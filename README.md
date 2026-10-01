@@ -11,7 +11,7 @@ Solo puede entrar `rivero.ander@gmail.com`.
    - Project URL
    - `anon` `public` key
 3. No copies la clave `service_role`. Esa clave salta la seguridad y no debe ir al repositorio ni al frontend.
-4. Abre **SQL Editor**, pega todo `supabase/schema.sql` y ejecútalo. El script crea las tablas, las reglas de acceso, el almacén privado de fotos y autoriza tu correo.
+4. Abre **SQL Editor**, pega todo `supabase/schema.sql` y ejecútalo. El script crea las tablas, las reglas de acceso, el almacén privado de fotos y autoriza tu correo. Si el proyecto ya existía, volver a ejecutarlo no borra tus datos; hace falta para activar la recuperación de respaldos JSON.
 
 ## Login con Google
 
@@ -41,11 +41,7 @@ npm test
 npm run dev
 ```
 
-Abre `http://localhost:5173/`, entra con Google y, en **Entradas**, usa **Importar historial** con `docs/Fuel_Log.csv`.
-
-Ese archivo trae 65 filas de un Chevrolet Aveo Lt Speed, de 2021 a 2026. La importación carga 51 servicios y 4 lecturas de odómetro. Omite 10 cargas de gasolina. El año del auto no viene en el archivo: complétalo en **Autos**. Los nombres quedan como en el respaldo (`Engine Oil`, `Battery`, y el resto en español). Después, en **Servicios**, marca los recurrentes y escribe cada cuántos kilómetros y cada cuántos meses.
-
-Si vuelves a importar el mismo archivo, no duplica las filas.
+Abre `http://localhost:5173/` y entra con Google. El historial inicial ya se cargó. Para guardar o recuperar los datos, en **Configuración** descarga o restaura un respaldo JSON.
 
 ## Publicar en GitHub Pages
 
@@ -66,12 +62,13 @@ La clave anon queda dentro del JavaScript público. Así está pensado Supabase:
 - El kilometraje nuevo tiene que ser mayor o igual que el último. La misma regla está en la base, no solo en la pantalla. Puedes corregir la lectura más alta editándola, hasta el valor anterior.
 - Supabase puede pausar un proyecto gratis si durante unos 7 días casi no recibe consultas. Avisa por correo y se reactiva desde el panel, sin costo, durante un año.
 - Base de 500 MB, 1 GB de archivos y el volumen de este historial caben en el plan gratis.
-- `docs/Fuel_Log.csv` es un respaldo personal y no hace falta subirlo. La página lo pide desde tu computadora al importar. En GitHub Actions las pruebas usan un ejemplo corto y omiten ese archivo si no está en el repositorio.
+- `docs/Fuel_Log.csv` fue la migración inicial y no hace falta subirlo. Los respaldos de ahora son JSON, desde **Configuración**.
 
 ## Pantallas
 
-- **Resumen:** alertas, kilometraje por año y gastos.
+- **Resumen:** alertas, últimos movimientos, kilometraje por año y gastos.
 - **Autos:** marca, modelo, año, foto y notas.
 - **Servicios:** nombre y, si es recurrente, intervalo en kilómetros y en meses.
-- **Entradas:** fecha, kilometraje, varios servicios, taller con sugerencias, costo en USD y notas.
+- **Entrada a pits:** fecha, kilometraje, varios servicios, taller con sugerencias, costo en USD y notas.
 - **Odómetro:** solo fecha y kilometraje.
+- **Configuración:** descargar o recuperar un respaldo JSON.

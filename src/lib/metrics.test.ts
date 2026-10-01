@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'vitest'
-import { buildAlerts, costByService, mileageByYear, observedKm } from './metrics'
+import { buildAlerts, costByService, costByYear, mileageByYear, observedKm } from './metrics'
 import type { Entry, Service } from './types'
-import { minimumOdometer, validateOdometer } from './validate'
+import { duplicateOdometerReading, minimumOdometer, validateOdometer } from './validate'
 
 function service(partial: Partial<Service> & Pick<Service, 'id' | 'name'>): Service {
   return {
@@ -79,8 +79,12 @@ describe('stats', () => {
 
   it('counts kilometres from the previous year-end reading', () => {
     assert.deepEqual(mileageByYear(entries), [
-      { year: 2021, km: 50, endOdometer: 150 },
       { year: 2022, km: 250, endOdometer: 400 },
+      { year: 2021, km: 50, endOdometer: 150 },
+    ])
+    assert.deepEqual(costByYear(entries), [
+      { year: 2022, total: 10 },
+      { year: 2021, total: 30 },
     ])
     assert.equal(observedKm(entries), 300)
   })
@@ -101,5 +105,24 @@ describe('validateOdometer', () => {
     assert.match(validateOdometer(99, 100) ?? '', /no puede ser menor/)
     assert.match(validateOdometer(79, 120, 80) ?? '', /no puede ser menor/)
     assert.equal(minimumOdometer([{ id: 'a', carId: 'car', odometer: 80 }, { id: 'b', carId: 'car', odometer: 120 }], 'car', 'b'), 80)
+  })
+
+  it('blocks a second odometer reading for the same car, day and kilometres', () => {
+    const readings = [
+      { id: 'a', carId: 'car', entryDate: '2026-10-01', odometer: 1200, kind: 'odometer' },
+      { id: 'b', carId: 'car', entryDate: '2026-10-01', odometer: 1200, kind: 'service' },
+    ]
+    assert.equal(
+      duplicateOdometerReading(readings, { carId: 'car', entryDate: '2026-10-01', odometer: 1200 }),
+      true,
+    )
+    assert.equal(
+      duplicateOdometerReading(readings, { id: 'a', carId: 'car', entryDate: '2026-10-01', odometer: 1200 }),
+      false,
+    )
+    assert.equal(
+      duplicateOdometerReading(readings, { carId: 'car', entryDate: '2026-10-02', odometer: 1200 }),
+      false,
+    )
   })
 })

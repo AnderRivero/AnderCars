@@ -1,3 +1,4 @@
+import type { BackupFile } from './backup'
 import { supabase } from './supabase'
 import type { Car, CarInput, Entry, EntryInput, OdometerInput, Service, ServiceInput } from './types'
 
@@ -284,6 +285,21 @@ export type ImportPayload = {
     notes: string | null
     services: string[]
   }>
+}
+
+export async function restoreBackup(
+  payload: BackupFile,
+): Promise<{ cars: number; services: number; entries: number }> {
+  const { data, error } = await client().rpc('restore_backup', { payload })
+  if (error) throw error
+  const value = typeof data === 'string' ? (JSON.parse(data) as unknown) : data
+  if (!value || typeof value !== 'object') return { cars: 0, services: 0, entries: 0 }
+  const record = value as { cars?: number; services?: number; entries?: number }
+  return {
+    cars: Number(record.cars ?? 0),
+    services: Number(record.services ?? 0),
+    entries: Number(record.entries ?? 0),
+  }
 }
 
 export async function importHistory(payload: ImportPayload): Promise<{ inserted: number; skipped: number }> {

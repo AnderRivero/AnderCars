@@ -29,10 +29,28 @@ export function minimumOdometer(
   return Math.max(...values)
 }
 
+export function duplicateOdometerReading(
+  entries: Array<{ id: string; carId: string; entryDate: string; odometer: number; kind: string }>,
+  input: { id?: string | null; carId: string; entryDate: string; odometer: number },
+): boolean {
+  const km = Math.round(input.odometer * 10)
+  return entries.some(
+    (entry) =>
+      entry.kind === 'odometer' &&
+      entry.id !== input.id &&
+      entry.carId === input.carId &&
+      entry.entryDate === input.entryDate &&
+      Math.round(entry.odometer * 10) === km,
+  )
+}
+
 export function errorText(error: unknown): string {
   if (error instanceof Error && error.message) return error.message
   if (error && typeof error === 'object' && 'message' in error) {
     const message = String(error.message)
+    if (message.includes('restore_backup') && /could not find|does not exist|schema cache/i.test(message)) {
+      return 'Falta activar la recuperación en Supabase. En el SQL Editor, ejecuta la función restore_backup de supabase/schema.sql.'
+    }
     if (message.includes('services_name_key') || message.includes('duplicate key')) {
       return 'Ya existe un servicio con ese nombre.'
     }

@@ -363,6 +363,138 @@ $$;
 revoke all on function public.import_history(jsonb) from public, anon;
 grant execute on function public.import_history(jsonb) to authenticated;
 
+-- Reemplaza autos, servicios y entradas por un respaldo JSON de la app.
+-- Si el proyecto ya existe, puedes ejecutar solo esta función en el SQL Editor.
+create or replace function public.restore_backup(payload jsonb)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  car_row jsonb;
+  service_row jsonb;
+  entry_row jsonb;
+  service_name text;
+  new_entry_id uuid;
+  linked_id uuid;
+  car_count integer := 0;
+  service_count integer := 0;
+  entry_count integer := 0;
+begin
+  if not public.is_allowed() then
+    raise exception 'No autorizado';
+  end if;
+
+  if coalesce(payload ->> 'app', '') <> 'AnderCars' or coalesce(payload ->> 'version', '') <> '1' then
+    raise exception 'El archivo no es un respaldo de AnderCars';
+  end if;
+
+  if jsonb_typeof(payload -> 'cars') <> 'array'
+    or jsonb_typeof(payload -> 'services') <> 'array'
+    or jsonb_typeof(payload -> 'entries') <> 'array' then
+    raise exception 'El respaldo está incompleto';
+  end if;
+
+  delete from public.entry_services;
+  delete from public.entries;
+  delete from public.services;
+  delete from public.cars;
+
+  for car_row in
+    select elements.value
+    from jsonb_array_elements(payload -> 'cars') as elements(value)
+  loop
+    insert into public.cars (id, brand, model, year, photo_path, notes, odometer)
+    values (
+      (car_row ->> 'id')::uuid,
+      btrim(car_row ->> 'brand'),
+      btrim(car_row ->> 'model'),
+      nullif(car_row ->> 'year', '')::integer,
+      nullif(btrim(coalesce(car_row ->> 'photoPath', '')), ''),
+      nullif(btrim(coalesce(car_row ->> 'notes', '')), ''),
+      0
+    );
+    car_count := car_count + 1;
+  end loop;
+
+  for service_row in
+    select elements.value
+    from jsonb_array_elements(payload -> 'services') as elements(value)
+  loop
+    insert into public.services (id, name, is_recurrent, interval_km, interval_months)
+    values (
+      (service_row ->> 'id')::uuid,
+      btrim(service_row ->> 'name'),
+      coalesce((service_row ->> 'isRecurrent')::boolean, false),
+      nullif(service_row ->> 'intervalKm', '')::integer,
+      nullif(service_row ->> 'intervalMonths', '')::integer
+    );
+    service_count := service_count + 1;
+  end loop;
+
+  for entry_row in
+    select elements.value
+    from jsonb_array_elements(payload -> 'entries') as elements(value)
+    order by (elements.value ->> 'odometer')::numeric asc, elements.value ->> 'entryDate' asc
+  loop
+    insert into public.entries (
+      id,
+      car_id,
+      entry_date,
+      odometer,
+      kind,
+      workshop,
+      cost_usd,
+      notes
+    )
+    values (
+      coalesce(nullif(entry_row ->> 'id', '')::uuid, gen_random_uuid()),
+      (entry_row ->> 'carId')::uuid,
+      (entry_row ->> 'entryDate')::date,
+      (entry_row ->> 'odometer')::numeric,
+      entry_row ->> 'kind',
+      nullif(btrim(coalesce(entry_row ->> 'workshop', '')), ''),
+      nullif(entry_row ->> 'costUsd', '')::numeric,
+      nullif(btrim(coalesce(entry_row ->> 'notes', '')), '')
+    )
+    returning id into new_entry_id;
+
+    if entry_row ->> 'kind' = 'service' then
+      for service_name in
+        select btrim(value)
+        from jsonb_array_elements_text(coalesce(entry_row -> 'services', '[]'::jsonb)) as names(value)
+        where btrim(value) <> ''
+      loop
+        select services.id
+        into linked_id
+        from public.services as services
+        where services.name_key = lower(service_name);
+
+        if linked_id is null then
+          raise exception 'El respaldo menciona un servicio que no está en la lista: %', service_name;
+        end if;
+
+        insert into public.entry_services (entry_id, service_id)
+        values (new_entry_id, linked_id)
+        on conflict do nothing;
+      end loop;
+    end if;
+
+    entry_count := entry_count + 1;
+  end loop;
+
+  return jsonb_build_object(
+    'cars', car_count,
+    'services', service_count,
+    'entries', entry_count
+  );
+end;
+$$;
+
+revoke all on function public.restore_backup(jsonb) from public, anon;
+grant execute on function public.restore_backup(jsonb) to authenticated;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'car-photos',
